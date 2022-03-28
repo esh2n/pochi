@@ -1,0 +1,40 @@
+# steps:
+# # Build the container image
+# - name: 'gcr.io/cloud-builders/docker'
+#   args: ['build', '-t', 'gcr.io/disbots/pochi', '.']
+#   env:
+#     - "SECRET_TOKEN=${_SECRET_TOKEN}"
+# # Push the container image to Container Registry
+# - name: 'gcr.io/cloud-builders/docker'
+#   args: ['push', 'gcr.io/disbots/pochi']
+# # Deploy container image to Cloud Run
+# - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+#   entrypoint: gcloud
+#   args: ['run', 'deploy', 'pochi', '--image', 'gcr.io/disbots/pochi', '--region', 'asia-northeast1']
+# images:
+# - gcr.io/disbots/pochi
+
+# timeout: 1200s
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/pochi:${SHORT_SHA}'
+      - '.'
+    env:
+      - "SECRET_TOKEN=${_SECRET_TOKEN}"
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ["push", "gcr.io/$PROJECT_ID/pochi"]
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'beta'
+      - 'run'
+      - 'deploy'
+      - 'pochi'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/pochi:${SHORT_SHA}'
+      - '--region'
+      - 'asia-northeast1'
+timeout: 1200s
