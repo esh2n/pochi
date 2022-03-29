@@ -16,3 +16,5 @@ ENV SECRET_TOKEN=${SECRET_TOKEN}
 
 # Run the web service on container startup.
 ENTRYPOINT ["target/release/pochi"]
+
+EXPOSE 8080
