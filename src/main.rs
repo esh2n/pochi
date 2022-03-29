@@ -25,6 +25,7 @@ impl EventHandler for Handler {
     // initializer
     async fn ready(&self, _: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
+        server().await;
     }
 }
 
@@ -53,7 +54,6 @@ async fn main() {
     dotenv().ok();
     let token = env::var("SECRET_TOKEN").expect("cannot read expected token.");
     bot(&token).await;
-    server().await;
 }
 
 async fn bot(token: &str) {
