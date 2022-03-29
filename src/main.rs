@@ -51,20 +51,13 @@ struct General;
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-
-    tracing_subscriber::fmt::init();
-    let app = Router::new()
-    .route("/", get(root));
-
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
-
     let token = env::var("SECRET_TOKEN").expect("cannot read expected token.");
+    bot(&token).await;
+    server().await;
+}
 
-    let http = Http::new_with_token(&token);
+async fn bot(token: &str) {
+    let http = Http::new_with_token(token);
     let bot_id = match http.get_current_application_info().await {
         Ok(info) => info.id,
         Err(why) => panic!("Could not access application info: {:?}", why),
@@ -86,7 +79,18 @@ async fn main() {
     }
 }
 
-// basic handler that responds with a static string
+async fn server() {
+    tracing_subscriber::fmt::init();
+    let app = Router::new()
+    .route("/", get(root));
+
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+}
+
 async fn root() -> &'static str {
     "Hello, World!"
 }
