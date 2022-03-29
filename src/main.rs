@@ -12,12 +12,12 @@ use serenity::framework::standard::{
 use serenity::framework::StandardFramework;
 use serenity::model::{channel::Message, gateway::Ready, id::UserId};
 use serenity::prelude::{Client, Context, EventHandler};
+use serenity::http::Http;
+
+use axum::{routing::get, Router};
+use std::net::SocketAddr;
 
 use commands::{channels::*, neko::*};
-
-use hyper::{Body, Response, Server};
-use hyper::service::service_fn_ok;
-use hyper::rt::{self, Future};
 struct Handler;
 
 #[async_trait]
@@ -51,34 +51,27 @@ struct General;
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-    let port: u16 = 8080;
-    let addr = ([0, 0, 0, 0], port).into();
 
-    let new_service = || {
-        service_fn_ok(|_| {
-            let mut data = "".to_string();
-            match env::var("TARGET") {
-                Ok(target) => {data.push_str(&target);},
-                Err(_e) => {data.push_str("")},
-            };
+    tracing_subscriber::fmt::init();
+    let app = Router::new()
+    .route("/", get(root));
 
-            Response::new(Body::from(data))
-        })
-    };
-
-    let server = Server::bind(&addr)
-        .serve(new_service)
-        .map_err(|e| eprintln!("server error: {}", e));
-
-    println!("Listening on http://{}", addr);
-
-    rt::run(server);
-
-
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
 
     let token = env::var("SECRET_TOKEN").expect("cannot read expected token.");
+
+    let http = Http::new_with_token(&token);
+    let bot_id = match http.get_current_application_info().await {
+        Ok(info) => info.id,
+        Err(why) => panic!("Could not access application info: {:?}", why),
+    };
     let framework = StandardFramework::new()
-        .configure(|c| c.prefix("~")) // prefix
+        .configure(|c| c.with_whitespace(true).on_mention(Some(bot_id)).prefix("!")) // prefix
+        .bucket("basic", |b| b.delay(2).time_span(10).limit(3)).await // delay 2 seconds, 3 req / 10 sec
         .help(&MY_HELP) // add help command
         .group(&GENERAL_GROUP); // add general
 
@@ -91,4 +84,9 @@ async fn main() {
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }
+}
+
+// basic handler that responds with a static string
+async fn root() -> &'static str {
+    "Hello, World!"
 }
