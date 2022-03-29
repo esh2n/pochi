@@ -21,4 +21,4 @@ steps:
       - '--region'
       - 'asia-northeast1'
       - '--set-env-vars=SECRET_TOKEN=OTU3MjQ0MDU2MjEwMTM3MTUw.Yj78_w.DLyOJHDF1pXD8uWUGinHaCq9Ocs'
-timeout: 1200s
+timeout: 3600s
