@@ -20,5 +20,5 @@ steps:
       - '--allow-unauthenticated'
       - '--region'
       - 'asia-northeast1'
-      - '--set-env-vars=SECRET_TOKEN=OTU3MjQ0MDU2MjEwMTM3MTUw.Yj78_w.DLyOJHDF1pXD8uWUGinHaCq9Ocs'
+      - '--set-env-vars=SECRET_TOKEN=${_SECRET_TOKEN}'
 timeout: 3600s
